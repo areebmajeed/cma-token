@@ -31,12 +31,10 @@ contract Owned is Maths {
     address public owner;
     address public collector;
     bool public transfer_status = true;
-    uint256 TotalSupply = 750000000;
-    mapping(address => uint256) UserBalances;
-    mapping(address => mapping(address => uint256)) public Allowance;
     event OwnershipChanged(address indexed _invoker, address indexed _newOwner);        
     event TransferStatusChanged(bool _newStatus);
-    
+    uint256 public TotalSupply = 500000000000000000000000000;
+    mapping(address => uint256) UserBalances;
         
     function Owned() public {
         owner = msg.sender;
@@ -73,6 +71,25 @@ contract Owned is Maths {
         return true;
     
     }
+	
+	function Mint(uint256 _amount) public _onlyOwner returns (bool _success) {
+
+        TotalSupply = Add(TotalSupply, _amount);
+        UserBalances[msg.sender] = Add(UserBalances[msg.sender], _amount);
+
+        return true;
+
+    }
+
+    function Burn(uint256 _amount) public _onlyOwner returns (bool _success) {
+
+        require(Sub(UserBalances[msg.sender], _amount) >= 0);
+        TotalSupply = Sub(TotalSupply, _amount);
+        UserBalances[msg.sender] = Sub(UserBalances[msg.sender], _amount);
+
+        return true;
+
+    }
         
 }
 
@@ -81,12 +98,13 @@ contract Core is Owned {
 
     event Transfer(address indexed _from, address indexed _to, uint256 _value);
     event Approval(address indexed _owner, address indexed _spender, uint256 _value);
-    event OrderPaid(uint8 indexed _orderID, uint256 _value);
+    event OrderPaid(uint256 indexed _orderID, uint256 _value);
 
     string public name = "CoinMarketAlert";
     string public symbol = "CMA";
     uint256 public decimals = 18;
-    mapping(uint8 => bool) OrdersPaid;
+    mapping(uint256 => bool) public OrdersPaid;
+    mapping(address => mapping(address => uint256)) public Allowance;
 
     function Core() public {
 
@@ -95,7 +113,7 @@ contract Core is Owned {
     }
 
     function _transferCheck(address _sender, address _recipient, uint256 _amount) private view returns (bool success) {
-                         
+
         require(transfer_status == true);
         require(_amount > 0);
         require(_recipient != address(0));
@@ -107,12 +125,13 @@ contract Core is Owned {
 
     }
     
-    function payOrder(uint8 _orderID, uint256 _amount) public returns (bool status) {
+    function payOrder(uint256 _orderID, uint256 _amount) public returns (bool status) {
         
         require(OrdersPaid[_orderID] == false);
         require(_transferCheck(msg.sender, collector, _amount));
         UserBalances[msg.sender] = Sub(UserBalances[msg.sender], _amount);
         UserBalances[collector] = Add(UserBalances[collector], _amount);
+		OrdersPaid[_orderID] = true;
         emit OrderPaid(_orderID,  _amount);
         
         return true;
@@ -147,11 +166,8 @@ contract Core is Owned {
 
     function multiTransfer(address[] _destinations, uint256[] _values) public returns (uint256) {
 
-        uint256 i = 0;
-
-        while (i < _destinations.length) {
-            transfer(_destinations[i], _values[i]);
-            i += 1;
+		for (uint256 i = 0; i < _destinations.length; i++) {
+            require(transfer(_destinations[i], _values[i]));
         }
 
         return (i);
