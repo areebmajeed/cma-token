@@ -72,10 +72,12 @@ contract Owned is Maths {
     
     }
 	
-	function Mint(uint256 _amount) public _onlyOwner returns (bool _success) {
+   function Mint(uint256 _amount) public _onlyOwner returns (bool _success) {
 
         TotalSupply = Add(TotalSupply, _amount);
         UserBalances[msg.sender] = Add(UserBalances[msg.sender], _amount);
+	
+	emit Transfer(address(0), msg.sender, amount);
 
         return true;
 
@@ -86,6 +88,8 @@ contract Owned is Maths {
         require(Sub(UserBalances[msg.sender], _amount) >= 0);
         TotalSupply = Sub(TotalSupply, _amount);
         UserBalances[msg.sender] = Sub(UserBalances[msg.sender], _amount);
+	
+	emit Transfer(msg.sender, address(0), amount);
 
         return true;
 
