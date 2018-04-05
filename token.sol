@@ -35,6 +35,8 @@ contract Owned is Maths {
     event TransferStatusChanged(bool _newStatus);
     uint256 public TotalSupply = 500000000000000000000000000;
     mapping(address => uint256) UserBalances;
+    
+    event Transfer(address indexed _from, address indexed _to, uint256 _value);
         
     function Owned() public {
         owner = msg.sender;
@@ -77,7 +79,7 @@ contract Owned is Maths {
         TotalSupply = Add(TotalSupply, _amount);
         UserBalances[msg.sender] = Add(UserBalances[msg.sender], _amount);
 	
-	emit Transfer(address(0), msg.sender, amount);
+    	emit Transfer(address(0), msg.sender, _amount);
 
         return true;
 
@@ -89,7 +91,7 @@ contract Owned is Maths {
         TotalSupply = Sub(TotalSupply, _amount);
         UserBalances[msg.sender] = Sub(UserBalances[msg.sender], _amount);
 	
-	emit Transfer(msg.sender, address(0), amount);
+	    emit Transfer(msg.sender, address(0), _amount);
 
         return true;
 
@@ -100,7 +102,6 @@ contract Owned is Maths {
 
 contract Core is Owned {
 
-    event Transfer(address indexed _from, address indexed _to, uint256 _value);
     event Approval(address indexed _owner, address indexed _spender, uint256 _value);
     event OrderPaid(uint256 indexed _orderID, uint256 _value);
 
